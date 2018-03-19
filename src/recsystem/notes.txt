@@ -1,0 +1,23 @@
+#use react
+we should use react in order to save everything in the browser.
+the form is only submitted only once when all the questions have been answered.
+use pagination.
+load all the first questions in the heirarchy and put them in the pagination and provide a next button to go the next set questions which will have sub questiuo
+or the followup questions which are called by the ajax with in every page.
+instead of onclick jquery function we should onclick attribute in the html and define the function which does that.
+the user should have the option of changing their options/answers anytime they want. but once they do it, there should be a pop up which makes
+an alert "Do you really want to change your decision" if they do then all the questions below that should get hidden and new questions should be loaded
+#lookups
+creating dynamic questionairre
+
+8/01/2018
+next meeting is on 24th january
+create some mock data until that and make the system running, with all the first level questions loaded manually and then the page is submitted the advices
+showing on the riufht panel using aja call so that we could see advices in real time.
+the use of react is still questionable since we load the page only once at the end, so we could just save the ids, in different arrays.
+hopefyll this works.
+
+
+Date 24/01/2018
+Binding the selected option. that means when i select yes for a questyion the next question appears and then if i select an option from the
+followup question the previous selection is removed.

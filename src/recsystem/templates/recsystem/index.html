@@ -1,0 +1,229 @@
+{% extends 'recsystem/default.html' %}
+{% block body %}
+
+      <div class="container-fluid" id="main-div">
+          <form class="" action="" method="post">
+            <div class="row">
+                <div role="tabpanel">
+                  <div class="col-md-3">
+                      <ul class="nav nav-pills brand-pills nav-stacked" role="tablist" id="questionTabs">
+                          <li role="presentation" class="brand-nav active"><a href="#tab1" aria-controls="tab1" role="tab" data-toggle="tab">First Question</a></li>
+                          <li role="presentation" class="brand-nav"><a href="#tab2" aria-controls="tab2" role="tab" data-toggle="tab">Second Question</a></li>
+                          <li role="presentation" class="brand-nav"><a href="#tab3" aria-controls="tab3" role="tab" data-toggle="tab">Third Question</a></li>
+                      </ul>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="jumbotron">
+                      <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="tab1">
+                          <div class="row">
+                              <h2>{{ question1.question_title }}</h2>
+                              <h3>{{ question1.question_text }}</h3>
+                              {% for item in question1.answer_set.all %}
+                                <div class="radio" style="display: inline">
+                                  <label ><input class"myclass" type="radio" name="optradio" value="{{ item.id }}"><span id="{{ item.id }}">{{ item.answer_text}}</span></label>
+                                </div>
+                              {% endfor %}
+                          </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="tab2">
+                          <div class="row">
+                              <h2>{{ question2.question_title }}</h2>
+                              <h3>{{ question2.question_text }}</h3>
+                              {% for item in question2.answer_set.all %}
+                                <div class="radio" style="display: inline">
+                                  <label ><input class"myclass" type="radio" name="optradio" value="{{ item.id }}"><span id="{{ item.id }}">{{ item.answer_text}}</span></label>
+                                </div>
+                              {% endfor %}
+                          </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="tab3">
+                          <div class="row">
+                              <h2>{{ question3.question_title }}</h2>
+                              <h3>{{ question3.question_text }}</h3>
+                              {% for item in question3.answer_set.all %}
+                                <div class="radio" style="display: inline">
+                                  <label ><input class="myclass radioclass" type="radio" name="optradio" value="{{ item.id }}"><span id="{{ item.id }}">{{ item.answer_text}}</span></label>
+                                </div>
+                              {% endfor %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                      <div id="next"></div>
+                  </div>
+
+                  <div class="col-md-3">
+                        <div class="panel panel-primary">
+                          <div class="panel-heading">Real Time Advice</div>
+                          <div class="panel-body" id="advice">No advice available for now</div>
+                        </div>
+                  </div>
+
+                </form>
+                </div>
+            </div>
+      </div>
+      <div id="adviceDiv" class="container"></div>
+
+
+      <script type="text/javascript">
+
+            $(function(){
+              var fidArray = [];
+              var adviceId ;
+              var adviceArray = [];
+
+
+              $("input").on('click', function(){
+
+                  var  selectedAnswer = $('input[type=radio][name=optradio]:checked').val();
+                  var ansText =   document.getElementById(selectedAnswer).innerHTML;
+                  console.log(ansText);
+                        fidArray.push(selectedAnswer);
+                        adviceId = fidArray.join('');
+                        recursive_ajax(selectedAnswer, ansText);
+              });
+
+
+                function recursive_ajax(selectedAnswer, ansText){
+                  var ansTextVar = ansText;
+                  console.log(selectedAnswer);
+                  $.ajax({
+                    type: 'GET',
+                    url: '{% url "recsystem:followUp" %}',
+                    data: {
+                        fid: selectedAnswer
+
+                    },
+                    success: function(data){
+
+                      console.log(data);
+                      append_elements(data, ansTextVar);
+                    }
+                  })
+
+                }
+
+                function append_elements(query, ansTextVar){
+                  var adviceObj = {};
+                  var x = query.advice[0];
+                  if (x) {
+                      $('.panel-body').html( x.fields.advice_text );
+                        adviceObj['ans_label'] = ansTextVar;
+                        adviceObj['advice'] = x.fields.advice_text ;
+                        adviceArray.push(adviceObj);
+                        console.log(adviceArray);
+                  }
+                  var size = 0;
+                  $.each(query, function(i, item){
+                    size++;
+                  })
+                  if (size >1) {
+                    var newDiv = document.createElement('div');
+                        newDiv.Id = query.question.pk;
+                        newDiv.ClassName = 'newDivClass';
+                        newDiv.innerHTML =  '<div class="jumbotron row" style="margin-left: -60px;">' +
+                                            '<h2> '+ query.question.fields.question_title + '</h2>' +
+                                            '<h3>'+ query.question.fields.question_text +'</h3>' +
+                                            '</div>' ;
+
+                      $.each(query.answers, function( i, item ) {
+                          var flag = true;
+                          var inputDiv = document.createElement('div');
+                          inputDiv.ClassName = 'radioClassInput';
+                          inputDiv.style = 'display: inline-block; margin-left: 20px;';
+
+                          var radioHtml  = document.createElement('input');
+                          radioHtml.setAttribute("type", "radio");
+                          radioHtml.setAttribute("value", item.pk);
+                          radioHtml.setAttribute("name", item.fields.question);
+                          radioHtml.setAttribute("class", "radioclass");
+                          var labelText = document.createElement('label');
+                          labelText.innerHTML = item.fields.answer_text;
+
+                          inputDiv.addEventListener('click', function(){
+                            if (flag) {
+                              radioHtml.setAttribute("checked", "checked");
+                              var selectedAns = item.pk ;
+
+                                fidArray.push(selectedAns);
+                                var adId = fidArray.join('');
+                                recursive_ajax(selectedAns, item.fields.answer_text);
+                                flag = false;
+                            }
+                          });
+                          inputDiv.appendChild(radioHtml);
+                          inputDiv.appendChild(labelText);
+                          newDiv.appendChild(inputDiv);
+                            $('.active.tab-pane').append(newDiv);
+                            $('.myrow').append(radioHtml);
+                            $('.myrow').append(labelText);
+                      });
+                  }
+                  else {
+                    var nextButtonDiv = document.createElement('div');
+                        nextButtonDiv.style = 'margin-bottom: 20px;';
+                        nextButtonDiv.innerHTML = '<button type="button" class="btn btn-success">Next</button>';
+                        nextButtonDiv.addEventListener('click', function(){
+                          console.log("hello");
+                          $('.nav-pills > .active').next('li').find('a').trigger('click');
+                        });
+                    document.getElementById('next').appendChild(nextButtonDiv);
+
+                    var submitButton = document.createElement('div');
+                        submitButton.innerHTML = '<button type="button" class="btn btn-primary">Get Complete advices</button>';
+                        document.getElementById('next').appendChild(submitButton);
+
+                        submitButton.addEventListener('click', function(){
+                          var doc = new jsPDF();
+                          var specialElementHandlers = {
+                              '#editor': function (element, renderer) {
+                                  return true;
+                              }
+                          };
+                          $('#main-div').hide();
+                          var newAdviceDiv = document.createElement('div');
+                              newAdviceDiv.id = 'myId';
+                              newAdviceDiv.className = 'container jumbotron';
+                              newAdviceDiv.innerHTML = '<h3>Advices based on your answers</h3>';
+                              $.each(adviceArray, function(i, item){
+                                var childDiv = document.createElement('div');
+                                    childDiv.className = 'childDivClass';
+                                    childDiv.style = 'margin-top: 20px; border-style: solid; border-color: #ddd; border-width: 2px; background-color: #F5F5F5'
+                                    childDiv.innerHTML = '<h4 style="margin-left: 25px; margin-top: 10px; margin-right: 25px"><strong> >>'+ item.ans_label +'</strong></h4>'+
+                                                         '<p  style="margin-left: 25px; margin-top: 10px; margin-right: 25px">'+ item.advice +'</p>';
+                                    newAdviceDiv.appendChild(childDiv);
+                              });
+                              document.getElementById('adviceDiv').appendChild(newAdviceDiv);
+                          var printBtn = document.createElement('div');
+                              printBtn.innerHTML = '<span class="glyphicon glyphicon-print"></span>';
+                              printBtn.className = 'serviceBtn'
+                              printBtn.title = 'Print';
+                          var downloadBtn = document.createElement('div');
+                              downloadBtn.innerHTML = '<span class="glyphicon glyphicon-save"></span>';
+                              downloadBtn.className = 'serviceBtn';
+                              downloadBtn.title = 'Download as Pdf';
+                              document.getElementById('adviceDiv').appendChild(printBtn);
+                              document.getElementById('adviceDiv').appendChild(downloadBtn);
+                          printBtn.addEventListener('click', function(){
+                            console.log('print btn clicked');
+                          });
+                          downloadBtn.addEventListener('click', function(){
+                                doc.fromHTML($('#myId').html(), 15, 15, {
+                                    'width': 170,
+                                        'elementHandlers': specialElementHandlers
+                                });
+                                doc.save('advice.pdf');
+
+                          });
+
+
+                        });
+
+                  }
+                }
+            });
+      </script>
+
+{% endblock %}
