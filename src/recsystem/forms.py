@@ -22,6 +22,11 @@ class FollowUpForm(forms.ModelForm):
          model = FollowUp
          fields = ['description','question', 'answer']
 
+class AdviceForm(forms.ModelForm):
+
+     class Meta:
+         model = Advice
+         fields = ['answer', 'answer_labels', 'advice_text', 'time_stamp']
 
 
 

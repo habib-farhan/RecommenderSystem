@@ -12,10 +12,11 @@ urlpatterns = [
     url(r'^add_question/$', views.add_question, name='add_question'),
     url(r'^add_answer/$', views.add_answer, name='add_answer'),
     url(r'^add_relation/$', views.add_relation, name='add_relation'),
+    url(r'^add_advice/$', views.add_advice, name='add_advice'),
     url(r'^save_question/$', views.save_question, name='save_question'),
     url(r'^details/$', views.details, name='details'),
     url(r'^followUp/$', views.followUp, name='followUp'),
-    
+
     # /recsystem/123/
     url(r'^(?P<question_id>[0-9]+)/$', views.detail, name='detail')
 ]

@@ -6,7 +6,7 @@ from django.http import JsonResponse
 import logging
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
-from .forms import  UserForm, QuestionForm, AnswerForm, FollowUpForm
+from .forms import  UserForm, QuestionForm, AnswerForm, FollowUpForm, AdviceForm
 from .models import Question, Answer, FollowUp, Advice
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -80,6 +80,18 @@ def add_answer(request):
     if form.is_valid():
         answer = form.save(commit=False)
         answer.save()
+        return render(request, 'recsystem/questions.html', {'questions': Question.objects.all() })
+    context = {
+        "form": form,
+    }
+    return render(request, 'recsystem/add_answer.html', context)
+
+def add_advice(request):
+
+    form = AdviceForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        advice = form.save(commit=False)
+        advice.save()
         return render(request, 'recsystem/questions.html', {'questions': Question.objects.all() })
     context = {
         "form": form,
