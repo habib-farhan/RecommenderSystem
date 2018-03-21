@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils import timezone
 #Question table which stores all questions and the followuo questions, each question has differetn answers and are connected
 #to the answer table with a foreign key of question table in the answetr table
 
@@ -24,15 +24,17 @@ class Answer(models.Model):
 #cross table for finding the followup questions associated with a particular answer
 class FollowUp(models.Model):
     description = models.CharField(max_length = 250)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+
 
 
 
 class Advice(models.Model):
+    answer = models.ForeignKey(Answer, null=True, on_delete=models.CASCADE)
     answer_labels = models.TextField(max_length = 2000)
     advice_text = models.TextField(max_length = 3000)
-    time_stamp = models.TextField(max_length= 2000)
+    time_stamp = models.TextField( default=timezone.now, max_length= 2000)
 
 
     def __str__(self):
