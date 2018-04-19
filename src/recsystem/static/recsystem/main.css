@@ -24,3 +24,43 @@
   color: #337ab7;
   margin: 15px;
 }
+.quesDetails{
+  margin-top: 20px;
+  margin-left: 10px;
+}
+.quesDetails > input {
+  max-width: 40%
+}
+.quesDetails > textarea {
+  max-width: 50%
+}
+.addquestion > h4{
+  margin-left: 10px;
+  margin-top: 20px;
+}
+.addquestion > p{
+  margin-left: 20px;
+
+}
+
+.addanswer{
+  margin-top: 20px;
+}
+.addanswer > h3{
+  margin-top: 20px;
+}
+.answerDivClass{
+  margin-top: 20px;
+
+
+}
+.myAnswerTable{
+  float: left;
+  max-width: 90%;
+  margin-right: 20%;
+  margin-left: 0;
+}
+.submitBtnClass{
+  float: left;
+  margin-left: 5px;
+}

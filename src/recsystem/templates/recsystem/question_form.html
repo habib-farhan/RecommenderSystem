@@ -1,0 +1,304 @@
+{% extends 'recsystem/default.html' %}
+{% block title %}Add Advice{% endblock %}
+{% block body %}
+
+<div class="container">
+    <div class="jumbotron">
+        <div class="row addquestion">
+                <h3>Add Question</h3>
+                <h4>Is this a followup question?</h4>
+                <p class="radioClassInput">
+                  <input type="radio" name="choice" value="yes" id="yes_radio">
+                  <label for="yes">Yes</label>
+                </p>
+                <p class="radioClassInput">
+                  <input type="radio" name="choice" value="no" id="no_radio">
+                  <label for="No">No</label>
+                </p>
+        </div>
+        <div class="row" id="folQue">
+            <h4>Choose the previous question and answer</h4>
+            <div class="col-md-6">
+              <select class="form-control" name="prevQues">
+                <option value="" >Select Question</option>
+                {% for question in allQuestions %}
+                  <option value="{{ question.id }}">{{ question.question_text }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <select class="form-control" name="prevAns" id="ansOptions">
+                  <option value="" class="toRemove" >Select Answer</option>
+              </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="quesDetails form-group">
+              <label for="question_title">Question title</label>
+              <input  class="form-control" type="text" name="que_title" value="">
+            </div>
+            <div class="quesDetails">
+              <label for="question_text">Question Text</label>
+              <textarea  class="form-control" name="que_text" rows="8" cols="80"></textarea>
+            </div>
+            <div class="quesDetails">
+              <label for="description">Description</label>
+              <input class="form-control" type="text" name="desc" value="">
+            </div>
+            <div class="quesDetails">
+              <label for="optType">Options Type</label>
+              <select class="form-control" name="optype" style="max-width: 20%;">
+                <option value="" >Select Option</option>
+                <option value="multi">Multiple Choice Options</option>
+                <option value="slider">Slider</option>
+              </select>
+            </div>
+            <div id="sliderOptions">
+              <label for="maxVal">Max Value: </label>
+              <input type="text" name="maxVal" value="">
+              <label for="minVal">Min Value:</label>
+              <input type="text" name="minVal" value="">
+              <label for="step">Step Size</label>
+              <input type="text" name="stepSize" value="">
+            </div>
+        </div>
+        <div class="row addanswer" >
+            <h3>Add Answers and Advices</h3>
+            <button type="button" class="btn btn-primary btn-sm" onclick="addMoreFunction()"name="button"><span class="glyphicon glyphicon-plus"></span>  Add</button>
+            <div class="answerDivClass" id="answers">
+              <table id="answerTable" class="table table-hover table-bordered myAnswerTable">
+                <tr>
+                  <th>No.</th>
+                  <th class="textClass">Answer text</th>
+                  <th class="minClass">Min</th>
+                  <th class="maxClass">Max</th>
+                  <th>Advices</th>
+                </tr>
+                <tr>
+                  <td>1</td>
+                  <td class="textClass"><input class="form-control" name="answerText1" type="text"></td>
+                  <td class="minClass"><input class="form-control" name="min1" type="text"></td>
+                  <td class="maxClass"><input class="form-control" name="max1" type="text"></td>
+                  <td>
+                    <select class="form-control select2"  name="advicesSelect1[]" id="advicesSelect1" multiple="multiple">
+                      <option value="select">Select Advices</option>
+                        {% for advice in advices %}
+                            <option value="{{ advice.id }}">{{ advice.advice_label }}</option>
+                        {% endfor %}
+                      <option value="none">Add new Advice</option>
+                    </select>
+                  </td>
+                </tr>
+              </table>
+            </div>
+        </div>
+        <div id="sbtBtn"></div>
+    </div>
+</div>
+<script type="text/javascript">
+
+
+  $('.select2').select2({
+    placeholder: 'Select Options'
+  });
+
+  var answerTextArray = [];
+  var answerMaxArray = [];
+  var answerMinArray = [];
+        var advicesArray = [];
+        var data = {};
+  var allAdvices;
+  var optionType;
+  var yesClick = false;
+  var prevAnsId;
+
+  $('#folQue').hide();
+  $('#answers').hide();
+  $('#sliderOptions').hide();
+  $('#answersSlider').hide();
+
+  $('#yes_radio').on('click', function(){
+    yesClick = true;
+    $('#folQue').show();
+  });
+
+  $('#no_radio').on('click', function(){
+    $('#folQue').hide();
+  });
+
+  $('select[name=optype]').on('change', function() {
+     optionType = this.value;
+     if (optionType === 'slider') {
+       // $('#sliderOptions').show();
+       $('.textClass').hide();
+       $('.minClass').show();
+       $('.maxClass').show();
+     }
+     else {
+       $('.minClass').hide();
+       $('.maxClass').hide();
+       $('.textClass').show();
+     }
+  });
+
+  $.ajax({
+    type: 'GET',
+    url: '{% url "recsystem:getAdvices" %}',
+    success: function(data){
+       allAdvices = data.advices;
+       console.log(allAdvices);
+    },
+    error: function(error){
+      console.log(error);
+    }
+  });
+
+var submitBtn = document.createElement('button');
+var submitBtnFlag = true;
+var count = 0;
+
+function addMoreFunction(){
+  count++;
+  if (submitBtnFlag) {
+    $('#answers').show();
+    submitBtn.className = "btn btn-success btn-lg submitBtnClass";
+    submitBtn.innerHTML = "<span>Submit</span>";
+    document.getElementById('sbtBtn').appendChild(submitBtn);
+    submitBtnFlag = false;
+  }
+  else {
+        if (optionType === 'slider') {
+          var table = document.getElementById('answerTable');
+          var row = table.insertRow(count);
+          var cell1 = row.insertCell(0);
+          var cell2 = row.insertCell(1);
+          var cell3 = row.insertCell(2);
+          var cell4 = row.insertCell(3);
+          cell1.innerHTML = count;
+          cell2.innerHTML = '<input class="form-control minClass" name="min'+ count +'" type="text">';
+          cell3.innerHTML =  '<input class="form-control maxClass" name="max'+ count +'" type="text">';
+          var options = '<option value="select">Select Advices</option>';
+          $.each(allAdvices, function(i, item){
+            options += '<option value="'+ item.pk +'">'+ item.fields.advice_label +'</option>';
+          });
+          cell4.innerHTML = '<select class="form-control select2" multiple="multiple"  id="advicesSelect' + count + '" name="advicesSelect'+ count +'[]">'+ options +'</select>';
+          $('.select2').select2({
+            placeholder: 'Select Options'
+          });
+        }
+        else {
+          var table = document.getElementById('answerTable');
+          var row = table.insertRow(count);
+          var cell1 = row.insertCell(0);
+          var cell2 = row.insertCell(1);
+          var cell3 = row.insertCell(2);
+          cell1.innerHTML = count;
+          cell2.innerHTML = '<input class="form-control textClass" name="answerText'+ count +'" type="text">';
+          var options = '<option value="select">Select Advices</option>';
+          $.each(allAdvices, function(i, item){
+            options += '<option value="'+ item.pk +'">'+ item.fields.advice_label +'</option>';
+          });
+          cell3.innerHTML = '<select class="form-control select2" multiple="multiple"  id="advicesSelect' + count + '" name="advicesSelect'+ count +'[]">'+ options +'</select>';
+          $('.select2').select2({
+            placeholder: 'Select Options'
+          });
+        }
+    }
+}
+
+
+$('select[name=prevQues]').on('change', function() {
+  var selQues = this.value;
+
+  $.ajax({
+    type: 'GET',
+    url: '{% url "recsystem:getAns" %}',
+    data: {
+      qid: selQues
+    },
+    success: function(data){
+      $('select[name=prevAns]').find('option').remove();
+      $('select[name=prevAns]').append('<option value="none" class="toRemove">Select Answer</option>');
+      $.each(data.answers, function(i, item){
+        $('select[name=prevAns]').append('<option value="' + item.pk + '" class="toRemove">' + item.fields.answer_text + '</option>');
+      });
+    },
+    error: function(error){
+      console.log(error);
+    }
+  });
+});
+
+
+function getAllValues(){
+  for (var i = 1; i <= count; i++) {
+    if ($('input[name=min'+ i +']').val() != "") {
+      answerMinArray.push($('input[name=min'+ i +']').val());
+    }
+    if ($('input[name=max'+ i +']').val() != "") {
+        answerMaxArray.push($('input[name=max'+ i +']').val());
+    }
+    if ($('input[name=answerText'+ i +']').val() != "") {
+      answerTextArray.push($('input[name=answerText'+ i +']').val());
+    }
+    if ($('#advicesSelect' + i).val() != null ) {
+        console.log($('#advicesSelect' + i).val());
+        advicesArray.push($('#advicesSelect' + i).val());
+    }
+
+  }
+}
+
+$('select[name=prevAns]').on('change', function() {
+   prevAnsId = this.value;
+});
+
+
+submitBtn.addEventListener('click', function(){
+
+if (yesClick) {
+ var pai = prevAnsId
+ data.ansId = pai;
+}
+else {
+  data.ansId = "none";
+}
+  data.csrfmiddlewaretoken = "{{ csrf_token }}";
+  data.queTitle = $('input[name=que_title]').val();
+  data.queText = $('textarea[name=que_text]').val();
+  data.desc = $('input[name=desc]').val();
+  data.optionType = optionType;
+  getAllValues();
+  if (answerMinArray.length > 0 && answerMaxArray.length > 0) {
+    data['ansMinArray[]'] = answerMinArray;
+    data['ansMaxArray[]'] = answerMaxArray;
+    console.log("min max exist");
+    console.log(answerMinArray);
+    console.log(answerMaxArray);
+  }
+  if (advicesArray.length > 0) {
+    data['ansAdvicesArray[]'] = advicesArray;
+    console.log(advicesArray.length);
+    console.log(advicesArray);
+    console.log("advices exist");
+  }
+  if (answerTextArray.length > 0) {
+      data.anstextArray = answerTextArray;
+      console.log("text exist");
+  }
+
+console.log(data);
+$.ajax({
+  type: 'POST',
+  url: '{% url "recsystem:saveData" %}',
+  data: data,
+  success: function(data){
+    console.log(data);
+  },
+  error: function(error){
+    console.log(error);
+  }
+});
+});
+</script>
+{% endblock %}

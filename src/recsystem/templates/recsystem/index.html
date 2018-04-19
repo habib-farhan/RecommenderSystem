@@ -7,47 +7,28 @@
                 <div role="tabpanel">
                   <div class="col-md-3">
                       <ul class="nav nav-pills brand-pills nav-stacked" role="tablist" id="questionTabs">
-                          <li role="presentation" class="brand-nav active"><a href="#tab1" aria-controls="tab1" role="tab" data-toggle="tab">First Question</a></li>
-                          <li role="presentation" class="brand-nav"><a href="#tab2" aria-controls="tab2" role="tab" data-toggle="tab">Second Question</a></li>
-                          <li role="presentation" class="brand-nav"><a href="#tab3" aria-controls="tab3" role="tab" data-toggle="tab">Third Question</a></li>
+                        {% for question in questions %}
+                          <li role="presentation" class="brand-nav"><a href="#tab{{ forloop.counter }}" aria-controls="tab{{ forloop.counter }}" role="tab" data-toggle="tab">{{ question.question_title }}</a></li>
+                        {% endfor %}
                       </ul>
                   </div>
                   <div class="col-md-6">
                     <div class="jumbotron">
                       <div class="tab-content">
-                        <div role="tabpanel" class="tab-pane active" id="tab1">
+                        {% for question in questions %}
+                        <div role="tabpanel" class="tab-pane" id="tab{{ forloop.counter }}">
                           <div class="row">
-                              <h2>{{ question1.question_title }}</h2>
-                              <h3>{{ question1.question_text }}</h3>
-                              {% for item in question1.answer_set.all %}
+                              <h2>{{ question.question_title }}</h2>
+                              <h3>{{ question.question_text }}</h3>
+                              {% for item in question.answer_set.all %}
                                 <div class="radio" style="display: inline">
                                   <label ><input class"myclass" type="radio" name="optradio" value="{{ item.id }}"><span id="{{ item.id }}">{{ item.answer_text}}</span></label>
                                 </div>
                               {% endfor %}
                           </div>
                         </div>
-                        <div role="tabpanel" class="tab-pane" id="tab2">
-                          <div class="row">
-                              <h2>{{ question2.question_title }}</h2>
-                              <h3>{{ question2.question_text }}</h3>
-                              {% for item in question2.answer_set.all %}
-                                <div class="radio" style="display: inline">
-                                  <label ><input class"myclass" type="radio" name="optradio" value="{{ item.id }}"><span id="{{ item.id }}">{{ item.answer_text}}</span></label>
-                                </div>
-                              {% endfor %}
-                          </div>
-                        </div>
-                        <div role="tabpanel" class="tab-pane" id="tab3">
-                          <div class="row">
-                              <h2>{{ question3.question_title }}</h2>
-                              <h3>{{ question3.question_text }}</h3>
-                              {% for item in question3.answer_set.all %}
-                                <div class="radio" style="display: inline">
-                                  <label ><input class="myclass radioclass" type="radio" name="optradio" value="{{ item.id }}"><span id="{{ item.id }}">{{ item.answer_text}}</span></label>
-                                </div>
-                              {% endfor %}
-                          </div>
-                        </div>
+                        {% endfor %}
+
                       </div>
                     </div>
                       <div id="next"></div>
@@ -68,7 +49,9 @@
 
 
       <script type="text/javascript">
-
+      $(document).ready(function(){
+          $('a[href="#tab1"]').tab('show');
+      });
             $(function(){
               var fidArray = [];
               var adviceId ;
@@ -106,13 +89,19 @@
 
                 function append_elements(query, ansTextVar){
                   var adviceObj = {};
-                  var x = query.advice[0];
+                  console.log(query);
+                  var x = query.advices;
+                  var adviceHtml = '';
                   if (x) {
-                      $('.panel-body').html( x.fields.advice_text );
-                        adviceObj['ans_label'] = ansTextVar;
-                        adviceObj['advice'] = x.fields.advice_text ;
-                        adviceArray.push(adviceObj);
-                        console.log(adviceArray);
+                    $.each(x, function(i, item){
+                      adviceHtml += '<span> >> '+  item.fields.advice_text  +'</span><br>';
+
+                    });
+                      $('.panel-body').html(adviceHtml);
+                      adviceObj['ans_label'] = ansTextVar;
+                      adviceObj['advices'] = adviceHtml
+                      adviceArray.push(adviceObj);
+                      console.log(adviceArray);
                   }
                   var size = 0;
                   $.each(query, function(i, item){

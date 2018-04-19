@@ -1,0 +1,240 @@
+{% extends 'recsystem/default.html' %}
+{% block body %}
+  <div class="container">
+    <div class="jumbotron">
+      <div class="row">
+          <h3>Edit Question</h3>
+          <input type="hidden" name="que_id" value="{{ question.id }}">
+          <div class="quesDetails form-group">
+            <label for="question_title">Question title</label>
+            <input  class="form-control" type="text" name="que_title" value="{{ question.question_title}}">
+          </div>
+          <div class="quesDetails">
+            <label for="question_text">Question Text</label>
+            <textarea  class="form-control" name="que_text" rows="8" cols="80">{{ question.question_text}}</textarea>
+          </div>
+          <div class="quesDetails">
+            <label for="description">Description</label>
+            <input class="form-control" type="text" name="desc" value="{{ question.description }}">
+          </div>
+          <div class="quesDetails">
+            <label for="optType">Options Type</label>
+            <select class="form-control" name="optype" style="max-width: 20%;">
+              <option value="" >Select Option</option>
+              {% if question.options_type == 'multi' %}
+                <option value="multi" selected >Multiple Choice Options</option>
+                <option value="slider"  >Slider</option>
+              {% endif %}
+              {% if question.options_type == 'slider' %}
+                <option value="slider" selected >Slider</option>
+                <option value="multi"  >Multiple Choice Options</option>
+              {% endif %}
+            </select>
+          </div>
+      </div>
+      <div class="row addanswer" >
+          <h3>Edit Answers and Advices</h3>
+          <!-- <button type="button" class="btn btn-primary btn-sm" onclick="addMoreFunction('{{ question.options_type }}')"name="button"><span class="glyphicon glyphicon-plus"></span>  Add</button> -->
+          <div class="answerDivClass" >
+
+            <table  id="answerTable" class="table table-hover table-bordered myAnswerTable">
+              {% if question.options_type == 'multi' %}
+                <tr>
+                  <th>No.</th>
+                  <th class="textClass">Answer text</th>
+                  <th>Advices</th>
+                </tr>
+                {% for answer in answers %}
+                  <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td class="textClass"><input type="hidden" name="answerId{{ forloop.counter }}" value="{{ answer.id }}"><input class="form-control" name="answerText{{ forloop.counter }}" type="text" value="{{ answer.answer_text }}"></td>
+                      <td>
+                        <select class="form-control select2"  name="advicesSelect"  id="advicesSelect{{ forloop.counter }}" multiple="multiple">
+                            {% for advice in answer.advices.all %}
+                              <option value="{{ advice.id }}" selected>{{ advice.advice_label }}</option>
+                            {% endfor %}
+                            {% for advice in allAdvices %}
+                              <option value="{{ advice.id }}">{{ advice.advice_label }}</option>
+                            {% endfor %}
+                        </select>
+                      </td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
+              {% if question.options_type == 'slider' %}
+                <tr>
+                  <th>No.</th>
+                  <th class="minClass">Min </th>
+                  <th class="maxClass">Max </th>
+                  <th>Advices</th>
+                </tr>
+                {% for answer in answers %}
+                  <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td class="textClass"><input class="form-control" name="answerMinText{{ forloop.counter }}" type="text" value="{{ answer.min_val }}"></td>
+                      <td class="textClass"><input class="form-control" name="answerMaxText{{ forloop.counter }}" type="text" value="{{ answer.max_val }}"></td>
+                      <td>
+                        <select class="form-control select2"  name="advicesSelect"  id="advicesSelect{{ forloop.counter }}" multiple="multiple">
+                            {% for advice in answer.advices.all %}
+                              <option value="{{ advice.id }}" selected>{{ advice.advice_label }}</option>
+                            {% endfor %}
+                            {% for advice in allAdvices %}
+                              <option value="{{ advice.id }}">{{ advice.advice_label }}</option>
+                            {% endfor %}
+                        </select>
+                      </td>
+                  </tr>
+                {% endfor %}
+              {% endif %}
+            </table>
+          </div>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-success btn-lg submitBtnClass" name="button" onclick="submitData('{{ question.options_type }}')">Submit</button>
+      </div>
+    </div>
+
+  </div>
+  <script type="text/javascript">
+  $('.select2').select2({
+    placeholder: 'Select Options'
+  });
+  var allAdvices;
+  var answerMinArray = [],
+      answerMaxArray = [],
+      answerIdArray = [],
+      advicesArray = [],
+      answerTextArray = [],
+      newOptions = false,
+      dataObj = {};
+  var count = $('#answerTable tr').length - 1 ;
+  $.ajax({
+    type: 'GET',
+    url: '{% url "recsystem:getAdvices" %}',
+    success: function(data){
+       allAdvices = data.advices;
+       console.log(allAdvices);
+    },
+    error: function(error){
+      console.log(error);
+    }
+  });
+  function addMoreFunction(optTyp){
+
+    newOptions = true;
+    var table = document.getElementById('answerTable');
+    count = $('#answerTable tr').length ;
+    var row = table.insertRow(count);
+
+    if (optTyp === 'slider') {
+      var cell1 = row.insertCell(0);
+      var cell2 = row.insertCell(1);
+      var cell3 = row.insertCell(2);
+      var cell4 = row.insertCell(3);
+      cell1.innerHTML = count;
+      cell2.innerHTML = '<input class="form-control minClass" name="answerMinText'+ count +'" type="text">';
+      cell3.innerHTML =  '<input class="form-control maxClass" name="answerMaxText'+ count +'" type="text">';
+      var options = '<option value="select">Select Advices</option>';
+      $.each(allAdvices, function(i, item){
+        options += '<option value="'+ item.pk +'">'+ item.fields.advice_label +'</option>';
+      });
+      cell4.innerHTML = '<select class="form-control select2" multiple="multiple" id="advicesSelect' + count + '" name="advicesSelect">'+ options +'</select>';
+      $('.select2').select2({
+        placeholder: 'Select Options'
+      });
+    }
+    else {
+      var cell1 = row.insertCell(0);
+      var cell2 = row.insertCell(1);
+      var cell3 = row.insertCell(2);
+      cell1.innerHTML = count;
+      cell2.innerHTML = '<input class="form-control textClass" name="answerText" type="text">';
+      var options = '<option value="select">Select Advices</option>';
+      $.each(allAdvices, function(i, item){
+        options += '<option value="'+ item.pk +'">'+ item.fields.advice_label +'</option>';
+      });
+      cell3.innerHTML = '<select class="form-control select2" multiple="multiple" id="advicesSelect' + count + '" name="advicesSelect">'+ options +'</select>';
+      $('.select2').select2({
+        placeholder: 'Select Options'
+      });
+    }
+
+  }
+
+  function getAllValues(optionType){
+    if (optionType === 'slider') {
+      for (var i = 1; i <= count; i++) {
+        if ($('input[name=answerMinText'+ i +']').val() != "") {
+          answerMinArray.push($('input[name=answerMinText'+ i +']').val());
+        }
+        if ($('input[name=answerMaxText'+ i +']').val() != "") {
+            answerMaxArray.push($('input[name=answerMaxText'+ i +']').val());
+        }
+        if ($('#advicesSelect' + i).val() != null ) {
+            console.log($('#advicesSelect' + i).val());
+            advicesArray.push($('#advicesSelect' + i).val());
+        }
+      }
+    }
+    else {
+      for (var i = 1; i <= count; i++) {
+        if ($('input[name=answerText'+ i +']').val() != "") {
+          answerTextArray.push($('input[name=answerText'+ i +']').val());
+        }
+        if ($('input[name=answerId'+ i +']').val() != "") {
+          answerIdArray.push($('input[name=answerId'+ i +']').val());
+        }
+        if ($('#advicesSelect' + i).val() != null ) {
+            console.log($('#advicesSelect' + i).val());
+            advicesArray.push($('#advicesSelect' + i).val());
+        }
+      }
+    }
+
+  }
+
+  function submitData(optionType){
+
+    if (newOptions) {
+      data.newOptions = true;
+    }
+    dataObj.csrfmiddlewaretoken = "{{ csrf_token }}";
+    dataObj.queId = $('input[name=que_id]').val();
+    dataObj.queTitle = $('input[name=que_title]').val();
+    dataObj.queText = $('textarea[name=que_text]').val();
+    dataObj.desc = $('input[name=desc]').val();
+    dataObj.optionType = optionType;
+    getAllValues(optionType);
+    if (answerMinArray.length > 0 && answerMaxArray.length > 0) {
+      dataObj['ansMinArray[]'] = answerMinArray;
+      dataObj['ansMaxArray[]'] = answerMaxArray;
+    }
+    if (advicesArray.length > 0) {
+      dataObj['ansAdvicesArray[]'] = advicesArray;
+    }
+    if (answerTextArray.length > 0) {
+        dataObj['anstextArray[]'] = answerTextArray;
+    }
+    if (answerIdArray.length > 0) {
+        dataObj['ansIdArray[]'] = answerIdArray;
+    }
+    console.log(dataObj);
+    $.ajax({
+      type: 'POST',
+      url: '{% url "recsystem:saveEditedData" %}',
+      data: dataObj,
+      success: function(data){
+        console.log(data);
+      },
+      error: function(error){
+        console.log(error);
+      }
+    });
+  }
+
+
+
+
+
+  </script>
+{% endblock %}
