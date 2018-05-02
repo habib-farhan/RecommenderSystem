@@ -1,217 +1,279 @@
-{% extends 'recsystem/default.html' %}
-{% block body %}
+{% extends 'recsystem/default.html' %} {% block body %}
 
-      <div class="container-fluid" id="main-div">
-          <form class="" action="" method="post">
-            <div class="row">
-                <div role="tabpanel">
-                  <div class="col-md-3">
-                      <ul class="nav nav-pills brand-pills nav-stacked" role="tablist" id="questionTabs">
-                        {% for question in questions %}
-                          <li role="presentation" class="brand-nav"><a href="#tab{{ forloop.counter }}" aria-controls="tab{{ forloop.counter }}" role="tab" data-toggle="tab">{{ question.question_title }}</a></li>
-                        {% endfor %}
-                      </ul>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="jumbotron">
-                      <div class="tab-content">
-                        {% for question in questions %}
-                        <div role="tabpanel" class="tab-pane" id="tab{{ forloop.counter }}">
-                          <div class="row">
-                              <h2>{{ question.question_title }}</h2>
-                              <h3>{{ question.question_text }}</h3>
-                              {% for item in question.answer_set.all %}
-                                <div class="radio" style="display: inline">
-                                  <label ><input class"myclass" type="radio" name="optradio" value="{{ item.id }}"><span id="{{ item.id }}">{{ item.answer_text}}</span></label>
-                                </div>
-                              {% endfor %}
-                          </div>
-                        </div>
-                        {% endfor %}
-
-                      </div>
-                    </div>
-                      <div id="next"></div>
-                  </div>
-
-                  <div class="col-md-3">
-                        <div class="panel panel-primary">
-                          <div class="panel-heading">Real Time Advice</div>
-                          <div class="panel-body" id="advice">No advice available for now</div>
-                        </div>
-                  </div>
-
-                </form>
-                </div>
-            </div>
+<div class="container-fluid" id="main-div">
+  <div class="row">
+    <div role="tabpanel">
+      <div class="col-md-3">
+        <ul class="nav nav-pills brand-pills nav-stacked" role="tablist" id="questionTabs">
+          {% for question in questions %}
+          <li role="presentation" class="brand-nav"><a href="#tab{{ forloop.counter }}" aria-controls="tab{{ forloop.counter }}" role="tab" data-toggle="tab">{{ question.question_title }}</a></li>
+          {% endfor %}
+        </ul>
       </div>
-      <div id="adviceDiv" class="container"></div>
+      <div class="col-md-6">
+        <div class="jumbotron">
+          <div class="tab-content">
+            {% for question in questions %}
+            <div role="tabpanel" class="tab-pane" id="tab{{ forloop.counter }}">
+              <div class="row" id="{{ question.id }}">
+                <h2>{{ question.question_title }}</h2>
+                <h3>{{ question.question_text }}</h3> {% if question.options_type == "multi" %} {% for item in question.answer_set.all %}
+                <div class="radio" style="display: inline">
+                  <label><input class="myclass" type="radio" name="optradio" value="{{ item.id }},{{ question.id }}"><span id="{{ item.id }}">{{ item.answer_text}}</span></label>
+                </div>
+                {% endfor %} {% elif question.options_type == "slider" %}
+                <span>{{ question.min }}&nbsp;</span><input id="{{ question.id }}" class="myslider" data-slider-id='ex1Slider' onchange="showVal(this.id, this.value)" type="text" data-slider-min="{{ question.min }}" data-slider-max="{{ question.max }}"
+                  data-slider-step="{{ question.step }}" /><span>&nbsp;{{ question.max }}</span> {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div id="next"></div>
+      </div>
+      <div class="col-md-3">
+        <div class="panel panel-primary">
+          <div class="panel-heading">Real Time Advice</div>
+          <div class="panel-body" id="advice">No advice available for now</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="adviceDiv" class="container"></div>
 
 
-      <script type="text/javascript">
-      $(document).ready(function(){
-          $('a[href="#tab1"]').tab('show');
-      });
-            $(function(){
-              var fidArray = [];
-              var adviceId ;
-              var adviceArray = [];
+<script type="text/javascript">
+  var ques_id_array = [];
+  var createSbmtBtn = true;
+  $('.myslider').slider({
+    formatter: function(value) {
+      return 'Current value: ' + value;
+    }
+  });
 
+  var adviceArray = [];
+  $(document).ready(function() {
+    $('a[href="#tab1"]').tab('show');
+  });
 
-              $("input").on('click', function(){
-
-                  var  selectedAnswer = $('input[type=radio][name=optradio]:checked').val();
-                  var ansText =   document.getElementById(selectedAnswer).innerHTML;
-                  console.log(ansText);
-                        fidArray.push(selectedAnswer);
-                        adviceId = fidArray.join('');
-                        recursive_ajax(selectedAnswer, ansText);
-              });
-
-
-                function recursive_ajax(selectedAnswer, ansText){
-                  var ansTextVar = ansText;
-                  console.log(selectedAnswer);
-                  $.ajax({
-                    type: 'GET',
-                    url: '{% url "recsystem:followUp" %}',
-                    data: {
-                        fid: selectedAnswer
-                    },
-                    success: function(data){
-
-                      console.log(data);
-                      append_elements(data, ansTextVar);
-                    }
-                  })
-
-                }
-
-                function append_elements(query, ansTextVar){
-                  var adviceObj = {};
-                  console.log(query);
-                  var x = query.advices;
-                  var adviceHtml = '';
-                  if (x) {
-                    $.each(x, function(i, item){
-                      adviceHtml += '<span> >> '+  item.fields.advice_text  +'</span><br>';
-
-                    });
-                      $('.panel-body').html(adviceHtml);
-                      adviceObj['ans_label'] = ansTextVar;
-                      adviceObj['advices'] = adviceHtml
-                      adviceArray.push(adviceObj);
-                      console.log(adviceArray);
-                  }
-                  var size = 0;
-                  $.each(query, function(i, item){
-                    size++;
-                  })
-                  if (size >1) {
-                    var newDiv = document.createElement('div');
-                        newDiv.Id = query.question.pk;
-                        newDiv.ClassName = 'newDivClass';
-                        newDiv.innerHTML =  '<div class="jumbotron row" style="margin-left: -60px;">' +
-                                            '<h2> '+ query.question.fields.question_title + '</h2>' +
-                                            '<h3>'+ query.question.fields.question_text +'</h3>' +
-                                            '</div>' ;
-
-                      $.each(query.answers, function( i, item ) {
-                          var flag = true;
-                          var inputDiv = document.createElement('div');
-                          inputDiv.ClassName = 'radioClassInput';
-                          inputDiv.style = 'display: inline-block; margin-left: 20px;';
-
-                          var radioHtml  = document.createElement('input');
-                          radioHtml.setAttribute("type", "radio");
-                          radioHtml.setAttribute("value", item.pk);
-                          radioHtml.setAttribute("name", item.fields.question);
-                          radioHtml.setAttribute("class", "radioclass");
-                          var labelText = document.createElement('label');
-                          labelText.innerHTML = item.fields.answer_text;
-
-                          inputDiv.addEventListener('click', function(){
-                            if (flag) {
-                              radioHtml.setAttribute("checked", "checked");
-                              var selectedAns = item.pk ;
-
-                                fidArray.push(selectedAns);
-                                var adId = fidArray.join('');
-                                recursive_ajax(selectedAns, item.fields.answer_text);
-                                flag = false;
-                            }
-                          });
-                          inputDiv.appendChild(radioHtml);
-                          inputDiv.appendChild(labelText);
-                          newDiv.appendChild(inputDiv);
-                            $('.active.tab-pane').append(newDiv);
-                            $('.myrow').append(radioHtml);
-                            $('.myrow').append(labelText);
-                      });
-                  }
-                  else {
-                    var nextButtonDiv = document.createElement('div');
-                        nextButtonDiv.style = 'margin-bottom: 20px;';
-                        nextButtonDiv.innerHTML = '<button type="button" class="btn btn-success">Next</button>';
-                        nextButtonDiv.addEventListener('click', function(){
-                          console.log("hello");
-                          $('.nav-pills > .active').next('li').find('a').trigger('click');
-                        });
-                    document.getElementById('next').appendChild(nextButtonDiv);
-
-                    var submitButton = document.createElement('div');
-                        submitButton.innerHTML = '<button type="button" class="btn btn-primary">Get Complete advices</button>';
-                        document.getElementById('next').appendChild(submitButton);
-
-                        submitButton.addEventListener('click', function(){
-                          var doc = new jsPDF();
-                          var specialElementHandlers = {
-                              '#editor': function (element, renderer) {
-                                  return true;
-                              }
-                          };
-                          $('#main-div').hide();
-                          var newAdviceDiv = document.createElement('div');
-                              newAdviceDiv.id = 'myId';
-                              newAdviceDiv.className = 'container jumbotron';
-                              newAdviceDiv.innerHTML = '<h3>Advices based on your answers</h3>';
-                              $.each(adviceArray, function(i, item){
-                                var childDiv = document.createElement('div');
-                                    childDiv.className = 'childDivClass';
-                                    childDiv.style = 'margin-top: 20px; border-style: solid; border-color: #ddd; border-width: 2px; background-color: #F5F5F5'
-                                    childDiv.innerHTML = '<h4 style="margin-left: 25px; margin-top: 10px; margin-right: 25px"><strong> >>'+ item.ans_label +'</strong></h4>'+
-                                                         '<p  style="margin-left: 25px; margin-top: 10px; margin-right: 25px">'+ item.advice +'</p>';
-                                    newAdviceDiv.appendChild(childDiv);
-                              });
-                              document.getElementById('adviceDiv').appendChild(newAdviceDiv);
-                          var printBtn = document.createElement('div');
-                              printBtn.innerHTML = '<span class="glyphicon glyphicon-print"></span>';
-                              printBtn.className = 'serviceBtn'
-                              printBtn.title = 'Print';
-                          var downloadBtn = document.createElement('div');
-                              downloadBtn.innerHTML = '<span class="glyphicon glyphicon-save"></span>';
-                              downloadBtn.className = 'serviceBtn';
-                              downloadBtn.title = 'Download as Pdf';
-                              document.getElementById('adviceDiv').appendChild(printBtn);
-                              document.getElementById('adviceDiv').appendChild(downloadBtn);
-                          printBtn.addEventListener('click', function(){
-                            console.log('print btn clicked');
-                          });
-                          downloadBtn.addEventListener('click', function(){
-                                doc.fromHTML($('#myId').html(), 15, 15, {
-                                    'width': 170,
-                                        'elementHandlers': specialElementHandlers
-                                });
-                                doc.save('advice.pdf');
-
-                          });
-
-
-                        });
-
-                  }
-                }
+  function showVal(id, val) {
+    var sliderValue = val;
+    var adviceHtml = '';
+    var adviceText = '';
+    $.ajax({
+      type: 'GET',
+      url: '{% url "recsystem:getAns" %}',
+      data: {
+        qid: id
+      },
+      success: function(data) {
+        console.log(data);
+        $.each(data.answers, function(i, item) {
+          if (parseInt(item.fields.min_val) <= sliderValue && parseInt(item.fields.max_val) > sliderValue) {
+            $.ajax({
+              type: 'GET',
+              url: '{% url "recsystem:getSliderAdvice" %}',
+              data: {
+                ansId: item.pk
+              },
+              success: function(data) {
+                var adviceObj = {};
+                $.each(data.advices, function(j, ele) {
+                  adviceHtml += '<span> >> ' + ele.fields.advice_text + '</span><br>';
+                  adviceText += ele.fields.advice_text + "\n";
+                });
+                $('.panel-body').html(adviceHtml);
+                adviceObj['ans_label'] = sliderValue;
+                adviceObj['advices'] = adviceText;
+                adviceArray.push(adviceObj);
+                console.log(adviceArray);
+              },
+              error: function(error) {
+                console.log(error);
+              }
             });
-      </script>
+            return false;
+          }
+        });
+      },
+      error: function(error) {
+        console.log(error);
+        alert("Something went wrong. Please try again!")
+      }
+    });
+  }
+  $(function() {
+    var fidArray = [];
+    var adviceId;
+
+    $("input[type=radio]").on('click', function() {
+      var selectedOpt = $('input[type=radio][name=optradio]:checked').val();
+      var optionSplit = selectedOpt.split(',');
+      var selected_ans_id = optionSplit[0];
+      var selected_ques_id = parseInt(optionSplit[1]);
+      var newArray = ques_id_array;
+        if (ques_id_array.indexOf(selected_ques_id) > -1) {
+          for (var i = 0; i < ques_id_array.length; i++) {
+            if (i > ques_id_array.indexOf(selected_ques_id)) {
+              document.getElementById(ques_id_array[i]).remove();
+            }
+          }
+          ques_id_array.length = ques_id_array.indexOf(selected_ques_id) + 1;
+        } else {
+          ques_id_array.push(selected_ques_id);
+        }
+      var ansText = document.getElementById(selected_ans_id).innerHTML;
+      fidArray.push(selected_ans_id);
+      adviceId = fidArray.join('');
+      recursive_ajax(selected_ans_id, ansText);
+    });
+
+    function recursive_ajax(selectedAnswer, ansText) {
+      var ansTextVar = ansText;
+      $.ajax({
+        type: 'GET',
+        url: '{% url "recsystem:followUp" %}',
+        data: {
+          fid: selectedAnswer
+        },
+        success: function(data) {
+          append_elements(data, ansTextVar);
+        }
+      });
+    }
+
+    function append_elements(query, ansTextVar) {
+      var adviceObj = {};
+      var ans_advices = query.advices;
+      var adviceHtml = '';
+      var adviceText = '';
+      if (ans_advices) {
+        $.each(ans_advices, function(i, item) {
+          adviceHtml += '<span> >> ' + item.fields.advice_text + '</span><br>';
+          adviceText += item.fields.advice_text + "\n";
+        });
+        $('.panel-body').html(adviceHtml);
+        adviceObj['ans_label'] = ansTextVar;
+        adviceObj['advices'] = adviceText;
+        adviceArray.push(adviceObj);
+        console.log(adviceArray);
+      }
+      var sizeofobject = 0;
+      $.each(query, function(i, item) {
+        sizeofobject++;
+      })
+      if (sizeofobject > 1) {
+        var newDiv = document.createElement('div');
+        newDiv.id = query.question.pk;
+        ques_id_array.push(query.question.pk);
+        newDiv.ClassName = 'newDivClass';
+        newDiv.innerHTML = '<div class="jumbotron row" style="margin-left: -60px;">' +
+                           '<h2> ' + query.question.fields.question_title + '</h2>' +
+                           '<h3>' + query.question.fields.question_text + '</h3>' +
+                           '</div>';
+
+        $.each(query.answers, function(i, item) {
+          var option_not_clicked = true;
+          var inputDiv = document.createElement('div');
+          inputDiv.ClassName = 'radioClassInput';
+          inputDiv.style = 'display: inline-block; margin-left: 20px;';
+
+          var radioHtml = document.createElement('input');
+          radioHtml.setAttribute("type", "radio");
+          radioHtml.setAttribute("id", item.pk);
+          radioHtml.setAttribute("value", item.pk);
+          radioHtml.setAttribute("name", item.fields.question);
+          radioHtml.setAttribute("class", "radioclass");
+          var labelText = document.createElement('label');
+          labelText.innerHTML = item.fields.answer_text;
+
+          inputDiv.addEventListener('click', function() {
+            radioHtml.setAttribute("checked", "checked");
+            if (ques_id_array.indexOf(query.question.pk) > -1 && ques_id_array.length - 1 != ques_id_array.indexOf(query.question.pk)) {
+              for (var i = 0; i < ques_id_array.length; i++) {
+                if (i > ques_id_array.indexOf(query.question.pk)) {
+                  document.getElementById(ques_id_array[i]).remove();
+                }
+              }
+              ques_id_array.length = ques_id_array.indexOf(query.question.pk) + 1;
+
+            }
+            var selectedAns = item.pk;
+            fidArray.push(selectedAns);
+            var adId = fidArray.join('');
+            recursive_ajax(selectedAns, item.fields.answer_text);
+            option_not_clicked = false;
+          });
+          inputDiv.appendChild(radioHtml);
+          inputDiv.appendChild(labelText);
+          newDiv.appendChild(inputDiv);
+          $('.active.tab-pane').append(newDiv);
+          $('.myrow').append(radioHtml);
+          $('.myrow').append(labelText);
+        });
+      } else {
+        if (createSbmtBtn) {
+          var nextButtonDiv = document.createElement('div');
+          nextButtonDiv.style = 'margin-bottom: 20px;';
+          nextButtonDiv.innerHTML = '<button type="button" class="btn btn-success">Next</button>';
+          nextButtonDiv.addEventListener('click', function() {
+            $('.nav-pills > .active').next('li').find('a').trigger('click');
+          });
+          document.getElementById('next').appendChild(nextButtonDiv);
+
+          var submitButton = document.createElement('div');
+          submitButton.innerHTML = '<button type="button" class="btn btn-primary">Get Complete advices</button>';
+          document.getElementById('next').appendChild(submitButton);
+
+          submitButton.addEventListener('click', function() {
+            var doc = new jsPDF();
+            var specialElementHandlers = {
+              '#editor': function(element, renderer) {
+                return true;
+              }
+            };
+            $('#main-div').hide();
+            var newAdviceDiv = document.createElement('div');
+            newAdviceDiv.id = 'myId';
+            newAdviceDiv.className = 'container jumbotron';
+            newAdviceDiv.innerHTML = '<h3>Advices based on your answers</h3>';
+            $.each(adviceArray, function(i, item) {
+              var childDiv = document.createElement('div');
+              childDiv.className = 'childDivClass';
+              childDiv.style = 'margin-top: 20px; border-style: solid; border-color: #ddd; border-width: 2px; background-color: #F5F5F5'
+              childDiv.innerHTML = '<h4 style="margin-left: 25px; margin-top: 10px; margin-right: 25px"><strong> >>' + item.ans_label + '</strong></h4>' +
+                '<p  style="margin-left: 25px; margin-top: 10px; margin-right: 25px">' + item.advices + '</p>';
+              newAdviceDiv.appendChild(childDiv);
+            });
+            document.getElementById('adviceDiv').appendChild(newAdviceDiv);
+            var printBtn = document.createElement('div');
+            printBtn.innerHTML = '<span class="glyphicon glyphicon-print"></span>';
+            printBtn.className = 'serviceBtn'
+            printBtn.title = 'Print';
+            var downloadBtn = document.createElement('div');
+            downloadBtn.innerHTML = '<span class="glyphicon glyphicon-save"></span>';
+            downloadBtn.className = 'serviceBtn';
+            downloadBtn.title = 'Download as Pdf';
+            document.getElementById('adviceDiv').appendChild(printBtn);
+            document.getElementById('adviceDiv').appendChild(downloadBtn);
+            printBtn.addEventListener('click', function() {
+              console.log('print btn clicked');
+            });
+            downloadBtn.addEventListener('click', function() {
+              doc.fromHTML($('#myId').html(), 15, 15, {
+                'width': 170,
+                'elementHandlers': specialElementHandlers
+              });
+              doc.save('advice.pdf');
+
+            });
+          });
+          createSbmtBtn = false;
+        }
+      }
+    }
+  });
+</script>
 
 {% endblock %}

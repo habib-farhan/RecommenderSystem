@@ -58,8 +58,8 @@
               <input type="text" name="maxVal" value="">
               <label for="minVal">Min Value:</label>
               <input type="text" name="minVal" value="">
-              <label for="step">Step Size</label>
-              <input type="text" name="stepSize" value="">
+              <label for="step">Step:</label>
+              <input type="text" name="step" value="">
             </div>
         </div>
         <div class="row addanswer" >
@@ -97,7 +97,6 @@
 </div>
 <script type="text/javascript">
 
-
   $('.select2').select2({
     placeholder: 'Select Options'
   });
@@ -105,8 +104,8 @@
   var answerTextArray = [];
   var answerMaxArray = [];
   var answerMinArray = [];
-        var advicesArray = [];
-        var data = {};
+  var advicesArray = [];
+  var data = {};
   var allAdvices;
   var optionType;
   var yesClick = false;
@@ -129,7 +128,7 @@
   $('select[name=optype]').on('change', function() {
      optionType = this.value;
      if (optionType === 'slider') {
-       // $('#sliderOptions').show();
+       $('#sliderOptions').show();
        $('.textClass').hide();
        $('.minClass').show();
        $('.maxClass').show();
@@ -256,35 +255,30 @@ $('select[name=prevAns]').on('change', function() {
 
 submitBtn.addEventListener('click', function(){
 
-if (yesClick) {
- var pai = prevAnsId
- data.ansId = pai;
-}
-else {
-  data.ansId = "none";
-}
+  if (yesClick) {
+   data.ansId = prevAnsId;
+   console.log("yes cl;icked");
+  }
   data.csrfmiddlewaretoken = "{{ csrf_token }}";
   data.queTitle = $('input[name=que_title]').val();
   data.queText = $('textarea[name=que_text]').val();
   data.desc = $('input[name=desc]').val();
   data.optionType = optionType;
+  if (optionType === 'slider') {
+    data.minVal = $('input[name=minVal]').val();
+    data.maxVal = $('input[name=maxVal]').val();
+    data.step = $('input[name=step]').val();
+  }
   getAllValues();
   if (answerMinArray.length > 0 && answerMaxArray.length > 0) {
     data['ansMinArray[]'] = answerMinArray;
     data['ansMaxArray[]'] = answerMaxArray;
-    console.log("min max exist");
-    console.log(answerMinArray);
-    console.log(answerMaxArray);
   }
   if (advicesArray.length > 0) {
     data['ansAdvicesArray[]'] = advicesArray;
-    console.log(advicesArray.length);
-    console.log(advicesArray);
-    console.log("advices exist");
   }
   if (answerTextArray.length > 0) {
       data.anstextArray = answerTextArray;
-      console.log("text exist");
   }
 
 console.log(data);
@@ -294,6 +288,9 @@ $.ajax({
   data: data,
   success: function(data){
     console.log(data);
+    var getUrl = window.location;
+    var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
+    window.location = baseUrl + '/details';
   },
   error: function(error){
     console.log(error);

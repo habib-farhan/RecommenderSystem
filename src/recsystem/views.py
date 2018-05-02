@@ -101,6 +101,15 @@ def getAns(request):
 
     return JsonResponse(context, safe=False)
 
+def getSliderAdvice(request):
+    aid = request.GET['ansId']
+    answer = Answer.objects.get(pk=aid)
+    advices = answer.advices.all()
+    context = {
+    'advices' : serializers.serialize('python', advices)
+    }
+    return JsonResponse(context, safe=False)
+
 def add_question(request):
 
     form = QuestionForm(request.POST or None, request.FILES or None)
@@ -169,10 +178,11 @@ def saveData(request):
         q.options_type = request.POST['optionType']
         q.save()
 
-        if  request.POST['ansId'] != 'none':
+        if request.POST.get('ansId'):
             try:
                 followup = FollowUp()
-                q.followUp = true
+                q.followUp = True
+                q.save()
                 followup.description = ""
                 followup.answer = Answer.objects.get(pk=request.POST['ansId'])
                 followup.question = q
@@ -205,9 +215,13 @@ def saveData(request):
                     answer.answer_text = item
                     answer.save()
         elif request.POST.getlist('ansMinArray[]') and request.POST.getlist('ansMaxArray[]'):
+            q.min = request.POST.get('minVal')
+            q.max = request.POST.get('maxVal')
+            q.step = request.POST.get('step')
+            q.save()
             minList = request.POST.getlist('ansMinArray[]')
             maxList = request.POST.getlist('ansMaxArray[]')
-            if not request.POST.getlist('ansAdvicesArray[]') is None:
+            if request.POST.getlist('ansAdvicesArray[]'):
                 advices = request.POST.getlist('ansAdvicesArray[]')
                 zip_min_max_ad = zip(minList, maxList, advices)
                 for min, max, ad in zip_min_max_ad:
@@ -223,12 +237,14 @@ def saveData(request):
                         answer.advices.add(advice)
                         answer.save()
             else:
-                for item in answers:
+                zip_min_max = zip(minList, maxList)
+                for min, max in zip_min_max:
                     answer = Answer()
                     answer.question = q
                     answer.min_val = min
                     answer.max_val = max
                     answer.save()
+
 
         return JsonResponse({'result':'ok'})
     else:
@@ -299,7 +315,6 @@ def saveEditedData(request):
 def delete(request, question_id):
     question = Question.objects.get(pk=question_id)
     question.delete()
-
     questions = Question.objects.all()
 
     return render(request, 'recsystem/questions.html', {'questions': questions} )

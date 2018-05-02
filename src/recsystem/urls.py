@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^details/$', views.details, name='details'),
     url(r'^followUp/$', views.followUp, name='followUp'),
     url(r'^getAns/$', views.getAns, name='getAns'),
+    url(r'^getSliderAdvice/$', views.getSliderAdvice, name='getSliderAdvice'),
     url(r'^getAdvices/$', views.getAdvices, name='getAdvices'),
     url(r'^saveData/$', views.saveData, name='saveData'),
     url(r'^saveEditedData/$', views.saveEditedData, name='saveEditedData'),

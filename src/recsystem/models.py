@@ -9,6 +9,9 @@ class Question(models.Model):
     description = models.TextField(max_length = 3000)
     options_type = models.CharField(max_length = 250)
     followUp = models.BooleanField(default=False)
+    max = models.CharField(max_length = 250, null=True)
+    min = models.CharField(max_length = 250, null=True)
+    step = models.CharField(max_length = 250, null=True)
 
     def __str__(self):
             return self.question_title
