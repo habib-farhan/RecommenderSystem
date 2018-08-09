@@ -2,27 +2,61 @@
 {% block title %}Add Answer{% endblock %}
 {% block body %}
     <div class="container">
-
-          <div class="col-sm-12 col-md-7">
-              <div class="panel panel-default">
-                  <div class="panel-body">
-                      <h3>Add Follow Up Relation</h3>
-                      {% if error_message %}
-                          <p><strong>{{ error_message }}</strong></p>
-                      {% endif %}
-                      <form class="form-horizontal" role="form" action="" method="post" >
-                          {% csrf_token %}
-                          {% include 'recsystem/form_template.html' %}
-                          <div class="form-group">
-                              <div class="col-sm-offset-2 col-sm-10">
-                                  <button type="submit" class="btn btn-success">Submit</button>
-                              </div>
-                          </div>
-                      </form>
-                  </div>
-              </div>
-          </div>
-
+      <div class="jumbotron relation-div">
+          <h3>Add a relation/followup</h3>
+          <h4>Select the answer</h4>
+          <select class="form-control" name="answer">
+            <option value="" >Select Answer</option>
+            {% for answer in answers %}
+              {% if answer.answer_text %}
+              <option value="{{ answer.id }}">{{ answer.answer_text }}</option>
+              {% else %}
+              <option value="{{ answer.id }}">{{ answer.min_val }}-{{ answer.max_val}}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+          <h4>Select the followup question</h4>
+          <select class="form-control" name="question">
+            <option value="" >Select Question</option>
+            {% for question in questions %}
+              <option value="{{ question.id }}">{{ question.question_text }}</option>
+            {% endfor %}
+          </select>
+          <button type="button" class="btn btn-md btn-success" name="button" onclick="submitForm();">Submit</button>
+      </div>
     </div>
+    <script type="text/javascript">
 
+      var ans,
+          que;
+          $('select[name=answer]').on('change', function() {
+              ans = this.value;
+              console.log(ans);
+          });
+          $('select[name=question]').on('change', function() {
+              que = this.value;
+              console.log(que);
+          });
+      function submitForm(){
+
+        $.ajax({
+          type: 'POST',
+          url: '{% url "recsystem:save_relation" %}',
+          data: {
+            csrfmiddlewaretoken: "{{ csrf_token }}",
+            answer: ans,
+            question: que
+          },
+          success: function(data){
+            console.log(data);
+            var getUrl = window.location;
+            var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
+            window.location = baseUrl + '/details';
+          },
+          error: function(error){
+            console.log(error);
+          }
+        });
+      }
+    </script>
 {% endblock %}

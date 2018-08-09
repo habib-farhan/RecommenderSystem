@@ -4,7 +4,19 @@
   margin-left: -14px;
   margin-top: -15px
 }
-
+.deleteButton{
+  float: right;
+  margin-top: 20px;
+  /* margin-bottom: 20px; */
+  margin-right: 12%;
+}
+.goBack{
+  float: right;
+  margin-top: 10px;
+}
+.questionsTable{
+  margin-top: 20px;
+}
 .navbar-custom{
   background-color: #1565C0;
   color: #F5F5F5;
@@ -24,6 +36,10 @@
   color: #337ab7;
   margin: 15px;
 }
+.lastdiv{
+  bottom: 0;
+  position: absolute;
+}
 .quesDetails{
   margin-top: 20px;
   margin-left: 10px;
@@ -42,7 +58,22 @@
   margin-left: 20px;
 
 }
-
+.func-btn{
+  display: inline-block;
+float: left;
+margin-bottom: 20px;
+}
+.nextBtn{
+  min-width: 164px;
+margin-left: 20px;
+}
+.slider-input-class{
+  max-width: 20%;
+}
+.sliderOptionsClass{
+  margin-left: 10px;
+  margin-top: 20px;
+}
 .addanswer{
   margin-top: 20px;
 }
@@ -63,4 +94,21 @@
 .submitBtnClass{
   float: left;
   margin-left: 5px;
+}
+.real-time-advice-div{
+position:fixed;
+right: 0;
+
+}
+.left-column{
+  position: relative;
+}
+.relation-div > h4{
+  margin-top: 20px;
+}
+.relation-div > select{
+  max-width: 50%;
+}
+.relation-div > button{
+  margin-top: 20px;
 }

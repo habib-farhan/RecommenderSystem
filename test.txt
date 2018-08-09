@@ -1,0 +1,9 @@
+questions to ask
+about the references, where to get the papers,
+how to write, discussing some of the implicit stuff
+background and related work?
+upto which extent shoudl i explain stuff, should i assume the reader knows something or doesnt know anything
+graphs and imges,
+database tables
+wrihtin some scenarios for general concepts, liike fighting fire.
+site tag in latex appear in letrature, foodnote, parmalinks.

@@ -33,8 +33,8 @@ class Answer(models.Model):
     min_val = models.CharField(max_length = 250, null=True)
     advices = models.ManyToManyField(Advice)
 
-    def __int__(self):
-                return self.id
+    def __str__(self):
+                return self.answer_text
 
 #cross table for finding the followup questions associated with a particular answer
 class FollowUp(models.Model):

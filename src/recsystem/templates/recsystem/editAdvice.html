@@ -1,0 +1,58 @@
+{% extends 'recsystem/default.html' %}
+{% block title %}Edit Advice{% endblock %}
+{% block body %}
+    <div class="container">
+
+          <div class="col-sm-12 col-md-7">
+              <div class="panel panel-default">
+                  <div class="panel-body jumbotron">
+                      <h3>Edit Advice</h3>
+
+                      <form class="form-horizontal" role="form" action="{% url 'recsystem:saveAdvice' advice.id %}" method="post" >
+                          {% csrf_token %}
+                          <div class="form-group">
+                              <div class="col-sm-offset-2 col-sm-10">
+                                  <span class="text-danger small"></span>
+                              </div>
+                              <label for="" class="control-label col-sm-2">
+                                <label for="id_advice_label">Advice label:</label>
+                              </label>
+                              <div class="col-sm-10">
+                                <textarea name="advice_label" rows="10" cols="40" maxlength="2000" required id="id_advice_label">{{ advice.advice_label }}</textarea>
+                              </div>
+                          </div>
+                          <div class="form-group">
+                              <div class="col-sm-offset-2 col-sm-10">
+                                  <span class="text-danger small"></span>
+                              </div>
+                              <label for="" class="control-label col-sm-2">
+                                <label for="id_advice_text">Advice Text:</label>
+                              </label>
+                              <div class="col-sm-10">
+                                <textarea name="advice_text" rows="10" cols="40" maxlength="3000" required id="id_advice_text">{{ advice.advice_text }}</textarea>
+                              </div>
+                          </div>
+                          <div class="form-group">
+                              <div class="col-sm-offset-2 col-sm-10">
+                                  <span class="text-danger small"></span>
+                              </div>
+                              <label for="" class="control-label col-sm-2">
+                                <label for="id_time_stamp">Time stamp:</label>
+                              </label>
+                              <div class="col-sm-10">
+                                <textarea name="time_stamp" rows="10" cols="40" maxlength="3000" required id="id_time_stamp">{{ advice.time_stamp }}</textarea>
+                              </div>
+                          </div>
+                          <div class="form-group">
+                              <div class="col-sm-offset-2 col-sm-10">
+                                  <button type="submit" class="btn btn-success">Submit</button>
+                              </div>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+
+    </div>
+
+{% endblock %}

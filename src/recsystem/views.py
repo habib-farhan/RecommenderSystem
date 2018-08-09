@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login
 from django.core import serializers
 from django.contrib.auth import logout
 from django.http import HttpResponse
+from django.utils import timezone
 from django.http import JsonResponse
 import logging
 import itertools
@@ -14,12 +15,31 @@ from django.core.exceptions import ObjectDoesNotExist
 
 
 def index(request):
-    questions = Question.objects.filter(followUp=False)
-    # question2 = Question.objects.get(pk=19)
-    # question3 = Question.objects.get(pk=13)
 
+    return render(request, 'recsystem/index.html')
+
+def studyrec(request):
+    try:
+        questions = Question.objects.filter(id__in=[175,179,190])
+        context = {'questions': questions}
+        return render(request, 'recsystem/recommender.html', context)
+    except Question.DoesNotExist :
+        raise ObjectDoesNotExist
+
+
+def gitrec(request):
+    try:
+        questions = Question.objects.filter(id__in=[192,194,195,200,205])
+        context = {'questions': questions}
+        return render(request, 'recsystem/recommender.html', context)
+    except Exception.DoesNotExist:
+        raise ObjectDoesNotExist
+
+
+def others(request):
+    questions = Question.objects.filter(followUp=False).exclude(id__in=[175,179,190,192,194,195,200,205])
     context = {'questions': questions}
-    return render(request, 'recsystem/index.html', context)
+    return render(request, 'recsystem/recommender.html', context)
 
 def question_form(request):
     questions = Question.objects.all()
@@ -38,8 +58,16 @@ def getAdvices(request):
     }
     return JsonResponse(context, safe=False)
 
+def allAdvices(request):
+    advices = Advice.objects.all()
+    context = {
+    'advices' : advices
+    }
+    return render(request, 'recsystem/advices.html', context)
+
 def details(request):
     questions = Question.objects.all()
+    firstQuestions = Question.objects.filter(followUp=False)
     answers = Answer.objects.all()
     followUps = FollowUp.objects.all()
     advices = Advice.objects.all()
@@ -47,15 +75,19 @@ def details(request):
     'questions' : questions,
     'answers' : answers,
     'followUps' : followUps,
+    'firstQuestions' : firstQuestions,
     'advices' : advices
     }
     return render(request, 'recsystem/questions.html', context)
 
 def editQuestion(request, question_id):
+    questions = Question.objects.all()
     question = get_object_or_404(Question, pk=question_id)
     answers = question.answer_set.all()
     allAdvices = Advice.objects.all()
+
     context = {
+    'questions': questions,
     'question': question,
     'answers': answers,
     'allAdvices': allAdvices
@@ -63,8 +95,12 @@ def editQuestion(request, question_id):
     return render(request, 'recsystem/editQuestion.html', context)
 
 
-
-
+def editAdvice(request, advice_id):
+    advice = get_object_or_404(Advice, pk=advice_id)
+    context = {
+    'advice' : advice
+    }
+    return render(request, 'recsystem/editAdvice.html', context)
 
 def detail(request, question_id):
     return HttpResponse("<h2>Deatils for the question: " + str(question_id) + "</h2>")
@@ -145,20 +181,39 @@ def add_advice(request):
     context = {
         "form": form,
     }
-    return render(request, 'recsystem/add_answer.html', context)
+    return render(request, 'recsystem/add_advice.html', context)
 
 def add_relation(request):
 
-    form = FollowUpForm(request.POST or None, request.FILES or None)
+    answers = Answer.objects.all()
+    questions = Question.objects.all()
 
-    if form.is_valid():
-        followUp = form.save(commit=False)
-        followUp.save()
-        return render(request, 'recsystem/questions.html', {'questions': Question.objects.all() })
     context = {
-        "form": form,
+    'answers' : answers,
+    'questions' : questions
     }
     return render(request, 'recsystem/add_relation.html', context)
+
+def save_relation(request):
+    f = FollowUp()
+    f.answer = Answer.objects.get(pk=request.POST.get('answer'))
+    f.question = Question.objects.get(pk=request.POST.get('question'))
+    f.save()
+    return JsonResponse({'result':'ok'})
+
+def saveAdvice(request, advice_id):
+
+    advice = get_object_or_404(Advice, pk=advice_id)
+    advice.advice_label = request.POST['advice_label']
+    advice.advice_text = request.POST['advice_text']
+    advice.time_stamp = timezone.now()
+    advice.save()
+    advices = Advice.objects.all()
+    context = {
+    'advices' : advices
+    }
+    return render(request, 'recsystem/advices.html', context)
+
 
 def save_question(request):
     q = Question()
@@ -259,6 +314,19 @@ def saveEditedData(request):
         q.options_type = request.POST['optionType']
         q.save()
 
+        if request.POST.get('ansId'):
+            try:
+                followup = FollowUp()
+                q.followUp = True
+                q.save()
+                followup.description = ""
+                followup.answer = Answer.objects.get(pk=request.POST['ansId'])
+                followup.question = q
+                followup.save()
+
+            except :
+                pass
+
         if request.POST.getlist('anstextArray[]'):
             answers = request.POST.getlist('anstextArray[]')
             ansIds = request.POST.getlist('ansIdArray[]')
@@ -277,33 +345,34 @@ def saveEditedData(request):
 
                     answer.save()
             else:
-                for item in answers:
-                    answer = Answer()
-                    answer.question = q
-                    answer.answer_text = item
+                zippedList = zip(ansIds, answers)
+                for ai, an in zippedList:
+                    answer = get_object_or_404(Answer, pk=ai)
+                    answer.answer_text = an
                     answer.save()
         elif request.POST.getlist('ansMinArray[]') and request.POST.getlist('ansMaxArray[]'):
             minList = request.POST.getlist('ansMinArray[]')
             maxList = request.POST.getlist('ansMaxArray[]')
-            if not request.POST.getlist('ansAdvicesArray[]') is None:
+            ansIds = request.POST.getlist('ansIdArray[]')
+            if request.POST.getlist('ansAdvicesArray[]'):
                 advices = request.POST.getlist('ansAdvicesArray[]')
-                zip_min_max_ad = zip(minList, maxList, advices)
-                for min, max, ad in zip_min_max_ad:
+                zip_min_max_ad = zip(minList, maxList, ansIds, advices)
+                for min, max, ai, ad in zip_min_max_ad:
                     adviceList = str(ad)
                     adviceList = adviceList.split(',')
-                    answer = Answer()
-                    answer.question = q
+                    answer = get_object_or_404(Answer, pk=ai)
                     answer.min_val = min
                     answer.max_val = max
                     answer.save()
                     for item in adviceList:
                         advice = get_object_or_404(Advice, pk=int(item))
                         answer.advices.add(advice)
-                        answer.save()
+
+                    answer.save()
             else:
-                for item in answers:
-                    answer = Answer()
-                    answer.question = q
+                zip_min_max_ai = zip(minList, maxList, ansIds)
+                for min, max, ai in zip_min_max_ai:
+                    answer = get_object_or_404(Answer, pk=ai)
                     answer.min_val = min
                     answer.max_val = max
                     answer.save()
@@ -318,6 +387,15 @@ def delete(request, question_id):
     questions = Question.objects.all()
 
     return render(request, 'recsystem/questions.html', {'questions': questions} )
+
+def deleteAll(request):
+
+    Question.objects.all().delete()
+    Answer.objects.all().delete()
+    FollowUp.objects.all().delete()
+    Advice.objects.all().delete()
+
+    return render(request, 'recsystem/index.html')
 
 def logout_user(request):
     logout(request)

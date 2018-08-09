@@ -2,6 +2,7 @@
 {% block title %}Add Advice{% endblock %}
 {% block body %}
 
+<!-- interface to add question, answers options and advices -->
 <div class="container">
     <div class="jumbotron">
         <div class="row addquestion">
@@ -16,22 +17,26 @@
                   <label for="No">No</label>
                 </p>
         </div>
-        <div class="row" id="folQue">
-            <h4>Choose the previous question and answer</h4>
-            <div class="col-md-6">
-              <select class="form-control" name="prevQues">
-                <option value="" >Select Question</option>
-                {% for question in allQuestions %}
-                  <option value="{{ question.id }}">{{ question.question_text }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-6">
-              <select class="form-control" name="prevAns" id="ansOptions">
-                  <option value="" class="toRemove" >Select Answer</option>
-              </select>
-            </div>
+        <div id="folQue">
+          <div class="row" >
+              <h4>Choose the previous question and answer</h4>
+              <div class="col-md-6">
+                <select class="form-control" name="prevQues">
+                  <option value="" >Select Question</option>
+                  {% for question in allQuestions %}
+                    <option value="{{ question.id }}">{{ question.question_text }}</option>
+                  {% endfor %}
+                </select>
+
+              </div>
+              <div class="col-md-6">
+                <select class="form-control" name="prevAns" id="ansOptions">
+                    <option value="" class="toRemove" >Select Answer</option>
+                </select>
+              </div>
+          </div>
         </div>
+
         <div class="row">
             <div class="quesDetails form-group">
               <label for="question_title">Question title</label>
@@ -54,12 +59,19 @@
               </select>
             </div>
             <div id="sliderOptions">
-              <label for="maxVal">Max Value: </label>
-              <input type="text" name="maxVal" value="">
-              <label for="minVal">Min Value:</label>
-              <input type="text" name="minVal" value="">
-              <label for="step">Step:</label>
-              <input type="text" name="step" value="">
+
+              <div class="sliderOptionsClass">
+                <label for="maxVal">Max Value: </label>
+                <input type="text"  class="form-control slider-input-class" name="maxVal" value="">
+              </div>
+              <div class="sliderOptionsClass">
+                <label for="minVal">Min Value:</label>
+                <input type="text"  class="form-control slider-input-class" name="minVal" value="">
+              </div>
+              <div class="sliderOptionsClass">
+                <label for="step">Step:</label>
+                <input type="text"  class="form-control slider-input-class" name="step" value="">
+              </div>
             </div>
         </div>
         <div class="row addanswer" >
@@ -115,6 +127,8 @@
   $('#answers').hide();
   $('#sliderOptions').hide();
   $('#answersSlider').hide();
+  $('.minClass').hide();
+  $('.maxClass').hide();
 
   $('#yes_radio').on('click', function(){
     yesClick = true;
@@ -156,11 +170,12 @@ var submitBtn = document.createElement('button');
 var submitBtnFlag = true;
 var count = 0;
 
+// adding more options
 function addMoreFunction(){
   count++;
   if (submitBtnFlag) {
     $('#answers').show();
-    submitBtn.className = "btn btn-success btn-lg submitBtnClass";
+    submitBtn.className = "btn btn-success btn-md submitBtnClass";
     submitBtn.innerHTML = "<span>Submit</span>";
     document.getElementById('sbtBtn').appendChild(submitBtn);
     submitBtnFlag = false;
@@ -186,6 +201,7 @@ function addMoreFunction(){
           });
         }
         else {
+
           var table = document.getElementById('answerTable');
           var row = table.insertRow(count);
           var cell1 = row.insertCell(0);
@@ -205,7 +221,7 @@ function addMoreFunction(){
     }
 }
 
-
+// previous questiosn selection
 $('select[name=prevQues]').on('change', function() {
   var selQues = this.value;
 
@@ -241,8 +257,7 @@ function getAllValues(){
       answerTextArray.push($('input[name=answerText'+ i +']').val());
     }
     if ($('#advicesSelect' + i).val() != null ) {
-        console.log($('#advicesSelect' + i).val());
-        advicesArray.push($('#advicesSelect' + i).val());
+      advicesArray.push($('#advicesSelect' + i).val());
     }
 
   }
@@ -252,12 +267,10 @@ $('select[name=prevAns]').on('change', function() {
    prevAnsId = this.value;
 });
 
-
+// submitting the form
 submitBtn.addEventListener('click', function(){
-
   if (yesClick) {
    data.ansId = prevAnsId;
-   console.log("yes cl;icked");
   }
   data.csrfmiddlewaretoken = "{{ csrf_token }}";
   data.queTitle = $('input[name=que_title]').val();
@@ -281,19 +294,18 @@ submitBtn.addEventListener('click', function(){
       data.anstextArray = answerTextArray;
   }
 
-console.log(data);
 $.ajax({
   type: 'POST',
   url: '{% url "recsystem:saveData" %}',
   data: data,
   success: function(data){
-    console.log(data);
     var getUrl = window.location;
     var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
     window.location = baseUrl + '/details';
   },
   error: function(error){
     console.log(error);
+    alert("Something went wrong! please try again")
   }
 });
 });

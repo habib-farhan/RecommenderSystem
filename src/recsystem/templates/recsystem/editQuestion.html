@@ -4,6 +4,51 @@
     <div class="jumbotron">
       <div class="row">
           <h3>Edit Question</h3>
+          <h4>Is this a followup question?</h4>
+          {% if question.followUp %}
+          <p class="radioClassInput">
+            <input type="radio" name="choice" value="yes" id="yes_radio" checked />
+            <label for="yes">Yes</label>
+          </p>
+          <p class="radioClassInput">
+            <input type="radio" name="choice" value="no" id="no_radio"/>
+            <label for="No">No</label>
+          </p>
+          {% else %}
+          <p class="radioClassInput">
+            <input type="radio" name="choice" value="yes" id="yes_radio"/>
+            <label for="yes">Yes</label>
+          </p>
+          <p class="radioClassInput">
+            <input type="radio" name="choice" value="no" id="no_radio" checked/>
+            <label for="No">No</label>
+          </p>
+          {% endif %}
+          <!-- <div class="row" id="folQue">
+              <h4>Choose the previous question and answer</h4>
+              <div class="col-md-6">
+                <select class="form-control" name="prevQues">
+                  {% for item in questions %}
+                    {% if item.id == previousQuestion.id %}
+                    <option value="{{ item.id }}" selected>{{ item.question_text }}</option>
+                    {% else %}
+                    <option value="{{ item.id }}">{{ item.question_text }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6">
+                <select class="form-control" name="prevAns" id="ansOptions">
+                    {% for item in previousQuestion.answer_set.all %}
+                      {% if item.id == previousAnswer.id %}
+                        <option value="{{ item.id }}" class="toRemove" selected>{{ item.answer_text }}</option>
+                      {% else %}
+                        <option value="{{ item.id }}" class="toRemove" >{{ item.answer_text }}</option>
+                      {% endif %}
+                    {% endfor %}
+                </select>
+              </div>
+          </div> -->
           <input type="hidden" name="que_id" value="{{ question.id }}">
           <div class="quesDetails form-group">
             <label for="question_title">Question title</label>
@@ -71,7 +116,7 @@
                 {% for answer in answers %}
                   <tr>
                       <td>{{ forloop.counter }}</td>
-                      <td class="textClass"><input class="form-control" name="answerMinText{{ forloop.counter }}" type="text" value="{{ answer.min_val }}"></td>
+                      <td class="textClass"><input type="hidden" name="answerId{{ forloop.counter }}" value="{{ answer.id }}"><input class="form-control" name="answerMinText{{ forloop.counter }}" type="text" value="{{ answer.min_val }}"></td>
                       <td class="textClass"><input class="form-control" name="answerMaxText{{ forloop.counter }}" type="text" value="{{ answer.max_val }}"></td>
                       <td>
                         <select class="form-control select2"  name="advicesSelect"  id="advicesSelect{{ forloop.counter }}" multiple="multiple">
@@ -96,6 +141,53 @@
 
   </div>
   <script type="text/javascript">
+
+var yesClick = false;
+
+if($('#yes_radio').prop("checked")){
+  yesClick = true;
+  // $('#folQue').show();
+}
+else if ($('#no_radio').prop("checked")) {
+    yesClick = false;
+// $('#folQue').hide();
+}
+else {
+  // $('#folQue').hide();
+}
+
+$('#yes_radio').on('click', function(){
+  // $('#folQue').show();
+  yesClick = true;
+});
+
+$('#no_radio').on('click', function(){
+  // $('#folQue').hide();
+  yesClick = false;
+});
+
+// $('select[name=prevQues]').on('change', function() {
+//   var selQues = this.value;
+//
+//   $.ajax({
+//     type: 'GET',
+//     url: '{% url "recsystem:getAns" %}',
+//     data: {
+//       qid: selQues
+//     },
+//     success: function(data){
+//       $('select[name=prevAns]').find('option').remove();
+//       $('select[name=prevAns]').append('<option value="none" class="toRemove">Select Answer</option>');
+//       $.each(data.answers, function(i, item){
+//         $('select[name=prevAns]').append('<option value="' + item.pk + '" class="toRemove">' + item.fields.answer_text + '</option>');
+//       });
+//     },
+//     error: function(error){
+//       console.log(error);
+//     }
+//   });
+// });
+
   $('.select2').select2({
     placeholder: 'Select Options'
   });
@@ -106,14 +198,15 @@
       advicesArray = [],
       answerTextArray = [],
       newOptions = false,
-      dataObj = {};
+      dataObj = {},
+      prevAnsId;
   var count = $('#answerTable tr').length - 1 ;
   $.ajax({
     type: 'GET',
     url: '{% url "recsystem:getAdvices" %}',
     success: function(data){
        allAdvices = data.advices;
-       console.log(allAdvices);
+
     },
     error: function(error){
       console.log(error);
@@ -170,8 +263,10 @@
         if ($('input[name=answerMaxText'+ i +']').val() != "") {
             answerMaxArray.push($('input[name=answerMaxText'+ i +']').val());
         }
+        if ($('input[name=answerId'+ i +']').val() != "") {
+          answerIdArray.push($('input[name=answerId'+ i +']').val());
+        }
         if ($('#advicesSelect' + i).val() != null ) {
-            console.log($('#advicesSelect' + i).val());
             advicesArray.push($('#advicesSelect' + i).val());
         }
       }
@@ -185,18 +280,24 @@
           answerIdArray.push($('input[name=answerId'+ i +']').val());
         }
         if ($('#advicesSelect' + i).val() != null ) {
-            console.log($('#advicesSelect' + i).val());
-            advicesArray.push($('#advicesSelect' + i).val());
+
+          advicesArray.push($('#advicesSelect' + i).val());
         }
       }
     }
 
   }
-
+  $('select[name=prevAns]').on('change', function() {
+     prevAnsId = this.value;
+  });
   function submitData(optionType){
 
     if (newOptions) {
       data.newOptions = true;
+    }
+    if (yesClick) {
+     dataObj.ansId = prevAnsId;
+
     }
     dataObj.csrfmiddlewaretoken = "{{ csrf_token }}";
     dataObj.queId = $('input[name=que_id]').val();
@@ -218,14 +319,16 @@
     if (answerIdArray.length > 0) {
         dataObj['ansIdArray[]'] = answerIdArray;
     }
-    console.log(dataObj);
+
     $.ajax({
       type: 'POST',
       url: '{% url "recsystem:saveEditedData" %}',
       data: dataObj,
       success: function(data){
         console.log(data);
-        window.location = 'http://127.0.0.1:8000/recsystem/details';
+        var getUrl = window.location;
+        var baseUrl = getUrl .protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
+        window.location = baseUrl + '/details';
       },
       error: function(error){
         console.log(error);
