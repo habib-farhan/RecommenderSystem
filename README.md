@@ -1,13 +1,11 @@
 # Recommender system
 
 
-
 ## Get Started
-Install docker and docker-compose and the in your project directory run:
+Install docker and docker-compose and then in your project directory run:
 ### `docker-compose run web python src/manage.py migrate`
 
 After that run the following command:
-
 ### `docker-compose up`
 
 docker-compose up, will automatically build it for you.<br>
