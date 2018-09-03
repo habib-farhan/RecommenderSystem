@@ -139,6 +139,7 @@
     $('#folQue').hide();
   });
 
+// event listener for selecting the option type
   $('select[name=optype]').on('change', function() {
      optionType = this.value;
      if (optionType === 'slider') {
@@ -154,6 +155,7 @@
      }
   });
 
+// ajax call to get all the advices from the database
   $.ajax({
     type: 'GET',
     url: '{% url "recsystem:getAdvices" %}',

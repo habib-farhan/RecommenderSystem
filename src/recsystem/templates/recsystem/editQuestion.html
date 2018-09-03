@@ -24,31 +24,6 @@
             <label for="No">No</label>
           </p>
           {% endif %}
-          <!-- <div class="row" id="folQue">
-              <h4>Choose the previous question and answer</h4>
-              <div class="col-md-6">
-                <select class="form-control" name="prevQues">
-                  {% for item in questions %}
-                    {% if item.id == previousQuestion.id %}
-                    <option value="{{ item.id }}" selected>{{ item.question_text }}</option>
-                    {% else %}
-                    <option value="{{ item.id }}">{{ item.question_text }}</option>
-                    {% endif %}
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="col-md-6">
-                <select class="form-control" name="prevAns" id="ansOptions">
-                    {% for item in previousQuestion.answer_set.all %}
-                      {% if item.id == previousAnswer.id %}
-                        <option value="{{ item.id }}" class="toRemove" selected>{{ item.answer_text }}</option>
-                      {% else %}
-                        <option value="{{ item.id }}" class="toRemove" >{{ item.answer_text }}</option>
-                      {% endif %}
-                    {% endfor %}
-                </select>
-              </div>
-          </div> -->
           <input type="hidden" name="que_id" value="{{ question.id }}">
           <div class="quesDetails form-group">
             <label for="question_title">Question title</label>
@@ -79,9 +54,7 @@
       </div>
       <div class="row addanswer" >
           <h3>Edit Answers and Advices</h3>
-          <!-- <button type="button" class="btn btn-primary btn-sm" onclick="addMoreFunction('{{ question.options_type }}')"name="button"><span class="glyphicon glyphicon-plus"></span>  Add</button> -->
           <div class="answerDivClass" >
-
             <table  id="answerTable" class="table table-hover table-bordered myAnswerTable">
               {% if question.options_type == 'multi' %}
                 <tr>
@@ -162,31 +135,8 @@ $('#yes_radio').on('click', function(){
 });
 
 $('#no_radio').on('click', function(){
-  // $('#folQue').hide();
   yesClick = false;
 });
-
-// $('select[name=prevQues]').on('change', function() {
-//   var selQues = this.value;
-//
-//   $.ajax({
-//     type: 'GET',
-//     url: '{% url "recsystem:getAns" %}',
-//     data: {
-//       qid: selQues
-//     },
-//     success: function(data){
-//       $('select[name=prevAns]').find('option').remove();
-//       $('select[name=prevAns]').append('<option value="none" class="toRemove">Select Answer</option>');
-//       $.each(data.answers, function(i, item){
-//         $('select[name=prevAns]').append('<option value="' + item.pk + '" class="toRemove">' + item.fields.answer_text + '</option>');
-//       });
-//     },
-//     error: function(error){
-//       console.log(error);
-//     }
-//   });
-// });
 
   $('.select2').select2({
     placeholder: 'Select Options'
@@ -335,10 +285,5 @@ $('#no_radio').on('click', function(){
       }
     });
   }
-
-
-
-
-
   </script>
 {% endblock %}
